@@ -1,4 +1,29 @@
+/*
 
+   Todo in this branch:
+
+   - make all the currentState a hash or an array of active states.
+   
+  Difficult:
+
+    - states can be defining some of the same classes and disabled
+      events
+
+    - when changing states, setting the element's classes will have
+      to be something like:
+      * remove any classes that are specified from the state that
+        got removed
+      * make a giant array with no duplicates of all the active
+        classes in the current state and add them
+
+    - the best approach might be to maintain a hash of all the
+      currently disabled events and current classes and always
+      iterating through those each time we change the state..
+      fugly.. :/ 
+      need to brush up on some algorithims or some methods of
+      doing that efficiently..
+
+*/
 
 window.Behave = (function ($) {
 
