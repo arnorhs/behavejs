@@ -15,20 +15,17 @@ toggle = new Behave({
 
 toggle.addState('off',{
     classes: ["off"],
-    enableEvents: ["mouseenter", "mouseleave"]
+    disableEvents: ["mouseleave","mouseenter"],
+    stateOn: function ($element) {
+        $element.html("Click me!! :D");
+    }
 });
 
 toggle.addState('on',{
     classes: ["on"],
-    enableEvents: []
-});
-
-toggle.addState('hover_on',{
-    classes: ["on","hover"]
-});
-
-toggle.addState('hover_off',{
-    classes: ["off", "hover"]
+    stateOn: function ($element) {
+        $element.html("I'm OANN!!");
+    }
 });
 
 toggle.addState('working',{
@@ -46,34 +43,27 @@ toggle.addState('working',{
 });
 
 toggle.addEvent("mouseenter", function () {
-    $(this).state(($(this).state() === "on") ? "hover_on" : "hover_off")
 });
 
 toggle.addEvent("mouseleave", function () {
-    $(this).state(($(this).state() === "on") ? "on" : "off")
 });
 
-// toggle.addEvent("click", function () {
-// 
-//     // do code to start ajax request
-//     if ($(this).state() === "off") {
-//         // do ajax requst for toggling on
-//         // when successful, turn the state on - possibly in some other event
-//         $(this).state("on");
-//     } else {
-//         // do ajax request for toggling off
-//         $(this).state("off");
-// 
-//     }
-// });
+toggle.addEvent("click", function () {
 
+    // do code to start ajax request
+    if (this.state() === "off") {
+        // do ajax requst for toggling on
+        // when successful, turn the state on - possibly in some other event
+        this.state("on");
+    } else {
+        // do ajax request for toggling off
+        this.state("off");
 
-
-console.log(toggle);
+    }
+});
 
 
 $(function(){
-
 
     var $toggle_button = $('<button>Toggle me</button>');
     toggle.addCollection($toggle_button);

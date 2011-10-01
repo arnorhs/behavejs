@@ -42,12 +42,66 @@ window.Behave = (function ($) {
         // that call events that have not been defined...
         // possibly add more stuff?
         if (!this.BHV.eventsAreSane()) return false;
+
+        this.setEvents();
         
         // will set the first state and call any callbacks, add classes
         // etc accordingly
         this.setInitialState();
 
         $element.data(BHVI, this);
+    };
+
+    BHVInstance.prototype.log = function () {
+        if (!this.BHV.options.debug) return;
+        Array.prototype.unshift.call(arguments, "Behave>");
+        console.log.apply(console, arguments);
+    };
+
+    BHVInstance.prototype.eventIsActive = function (eventName) {
+        return this.BHV._states[this.getState()].disableEvents.indexOf(eventName) < 0
+    };
+
+    // binds an anonymous function to all the events in this behavior
+    // which checks if it's ok to call it and then does a callback to the
+    // appropriate event handler.. maybe it shoudln't be anonymous?
+    BHVInstance.prototype.setEvents = function () {
+
+        // maybe for isolation purposes, this should rather be doing something like
+        // this.BHV.getEvents() or something.. fuck it..
+        // setting self is needed to be able to reference it from the callback
+        // function... since we won't have control over how that one gets called
+        // we could pass it through as an event parameter, but that could possibly
+        // override some params the user is using and will be overly syntaxy
+        var evs = this.BHV._events, self = this;
+
+        for (var i in evs) {
+            // we need to wrap this so that the value of i will be maintained unique
+            // and not updated as we go further, or else it will always be the newest
+            // version (last element of the object)
+            // an alternative, since we're using jquery would be to use $.each on the
+            // event list above..
+            (function(){
+                var eventName = i;
+                self.$element.bind(eventName, function (e) {
+                    var active = self.eventIsActive(eventName);
+                    self.log('called: ',eventName, active ? " (active)" : " (not active)");
+                    if (active) {
+                        // adding the element to the end of the arguments list
+                        // I wish arguments was detected as an array so it would
+                        // have arguments.push, but at least it has arguments.length
+                        arguments[arguments.length] = self.$element;
+                        return evs[eventName].apply(self, arguments);
+                    } else {
+                        // so that if it's a click or a form submit, and it's disabled
+                        // the default action won't be fired.. we're not doing
+                        // stopPropagation() though, because there might be some stuff
+                        // that's out of our reach that's supposed to get fired..
+                        e.preventDefault();
+                    }
+                });
+            })();
+        }
     };
 
     BHVInstance.prototype.setInitialState = function (state) {
@@ -65,9 +119,6 @@ window.Behave = (function ($) {
 
         // call the callback from stateOn
         this.callCallback(stateProps.stateOn);
-
-        // add events if any
-        this.setEvents("bind", stateProps.enableEvents);
 
     };
 
@@ -95,7 +146,7 @@ window.Behave = (function ($) {
     */
     BHVInstance.prototype.setState = function (newState) {
         
-        console.log("settings state to: "+newState);
+        this.log("settings state to: "+newState);
 
         // check if this state is even on our list of valid states
         if (typeof this.BHV._states[newState] === UNDEFINED) {
@@ -107,6 +158,8 @@ window.Behave = (function ($) {
         var oldStateProps = this.BHV._states[this.currentState];
         var newStateProps = this.BHV._states[newState];
 
+        console.log(oldStateProps, newStateProps);
+
         // call the callback for stateOff
         this.callCallback(oldStateProps.stateOff);
 
@@ -116,43 +169,17 @@ window.Behave = (function ($) {
         // call the callback from stateOn
         this.callCallback(newStateProps.stateOn);
 
-        // remove events if any
-        this.setEvents("unbind", newStateProps.disableEvents);
-        // add events if any
-        this.setEvents("bind", newStateProps.enableEvents);
-
         // and finally actually set the state to the current one
         this.currentState = newState;
 
     };
 
     // only used in .setState
-    // this function iterates through all the element's events and binds
-    // the same anonymous function to all of them which is used to wrap
-    // the event handler of the event and calls it - but only if the
-    // current state doesn't ban it...
-    BHVInstance.prototype.setEvents = function (bindOrUnbind, events) {
-        if (events.length < 1) {
-            return false;
-        }
-        for ( var i = 0, l = events.length; i < l; i++) {
-            // maybe we need to call unbind w/o the function parameter
-            // but I think calling it with it will remove it if that particular
-            // function is set to the element
-            console.log(this.$element, bindOrUnbind, events[i], this.BHV._events, events[i]);
-
-            this.$element[bindOrUnbind](events[i], function () {
-                this.BHV._events[events[i]] 
-            });
-        }
-        return true;
-    };
-
-    // only used in .setState
-    BHVInstance.prototype.callCallback = function (name) {
-        if (isFunction(name)) {
+    BHVInstance.prototype.callCallback = function (func) {
+        if (isFunction(func)) {
+            this.log("calling callback: ",func);
             // calling the callback with the element as the parameter
-            name.call(this, this.$element);
+            func.call(this, this.$element);
         }
     };
 
@@ -197,16 +224,16 @@ window.Behave = (function ($) {
 
     BHV.prototype.eventsAreSane = function () {
 
-        // Loop through all states and make sure there are no event enablers/disablers
+        // Loop through all states and make sure there are no event disablers
         // that have been set to events that have not been defined - else they will get
         // triggered when the states get loaded
         for (var i in this._states) {
             var st = this._states[i];
-            var evs = st.disableEvents.concat(st.enableEvents);
+            var evs = st.disableEvents;
             for (var k = 0; k < evs.length; k++) {
                 if (typeof this._events[evs[k]] === "undefined") {
                     // should maybe echo or print out.. ??
-                    console.log('events are NOT sane: ', evs[k], ' is nowhere to be found...');
+                    this.log('events are NOT sane: ', evs[k], ' is nowhere to be found...');
                     return false;
                 }
             }
@@ -234,9 +261,6 @@ window.Behave = (function ($) {
           classes       a set of classes that will be applied to the object
                         when it has this state
 
-          enableEvents  which events will be enabled when it reaches this
-                        state
-
           disableEvents which events will be disabled when it reaches this
                         state
 
@@ -258,7 +282,6 @@ window.Behave = (function ($) {
         // I think it won't be needed..
         this._states[state] = $.extend({},{
             classes: [],
-            enableEvents: [],
             disableEvents: [],
             stateOn: null,
             stateOff: null
@@ -312,28 +335,6 @@ window.Behave = (function ($) {
         return true;
 
     };
-
-    // highly dubious bit.. modifying jQuery to add a reference to the 
-    // .state() function.. :S
-    // this is basically a proxy function
-    // does not return "this" so it's not chainable
-    $.fn.state = function () {
-
-        // bhvi
-        var bhvi = this.data(BHVI);
-
-
-        // try to see if the object is of the right type..
-        if (typeof bhvi === UNDEFINED || bhvi.currentState === UNDEFINED) {
-            // essentially the function fails
-            return false;
-        }
-        // call the original object's function with the parameters passed to this one
-        return bhvi.state.apply(bhvi, arguments);
-
-    }
-
-
 
     return BHV;
 
