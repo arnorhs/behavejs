@@ -166,8 +166,6 @@ window.Behave = (function ($) {
             var oldStateProps = this.BHV._states[this.currentState];
             var newStateProps = this.BHV._states[newState];
 
-            console.log(oldStateProps, newStateProps);
-
             // call the callback for stateOff
             this.callCallback(oldStateProps.stateOff);
 
