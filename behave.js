@@ -52,148 +52,152 @@ window.Behave = (function ($) {
         $element.data(BHVI, this);
     };
 
-    BHVInstance.prototype.log = function () {
-        if (!this.BHV.options.debug) return;
-        Array.prototype.unshift.call(arguments, "Behave>");
-        console.log.apply(console, arguments);
-    };
+    /* defining all methods in an object-esque notation: */
 
-    BHVInstance.prototype.eventIsActive = function (eventName) {
-        return this.BHV._states[this.getState()].disableEvents.indexOf(eventName) < 0
-    };
+    BHVInstance.prototype = {
+        log: function () {
+            if (!this.BHV.options.debug) return;
+            Array.prototype.unshift.call(arguments, "Behave>");
+            console.log.apply(console, arguments);
+        },
 
-    // binds an anonymous function to all the events in this behavior
-    // which checks if it's ok to call it and then does a callback to the
-    // appropriate event handler.. maybe it shoudln't be anonymous?
-    BHVInstance.prototype.setEvents = function () {
+        eventIsActive: function (eventName) {
+            return this.BHV._states[this.getState()].disableEvents.indexOf(eventName) < 0
+        },
 
-        // maybe for isolation purposes, this should rather be doing something like
-        // this.BHV.getEvents() or something.. fuck it..
-        // setting self is needed to be able to reference it from the callback
-        // function... since we won't have control over how that one gets called
-        // we could pass it through as an event parameter, but that could possibly
-        // override some params the user is using and will be overly syntaxy
-        var evs = this.BHV._events, self = this;
+        // binds an anonymous function to all the events in this behavior
+        // which checks if it's ok to call it and then does a callback to the
+        // appropriate event handler.. maybe it shoudln't be anonymous?
+        setEvents: function () {
 
-        for (var i in evs) {
-            // we need to wrap this so that the value of i will be maintained unique
-            // and not updated as we go further, or else it will always be the newest
-            // version (last element of the object)
-            // an alternative, since we're using jquery would be to use $.each on the
-            // event list above..
-            (function(){
-                var eventName = i;
-                self.$element.bind(eventName, function (e) {
-                    var active = self.eventIsActive(eventName);
-                    self.log('called: ',eventName, active ? " (active)" : " (not active)");
-                    if (active) {
-                        // adding the element to the end of the arguments list
-                        // I wish arguments was detected as an array so it would
-                        // have arguments.push, but at least it has arguments.length
-                        arguments[arguments.length] = self.$element;
-                        return evs[eventName].apply(self, arguments);
-                    } else {
-                        // so that if it's a click or a form submit, and it's disabled
-                        // the default action won't be fired.. we're not doing
-                        // stopPropagation() though, because there might be some stuff
-                        // that's out of our reach that's supposed to get fired..
-                        e.preventDefault();
-                    }
-                });
-            })();
+            // maybe for isolation purposes, this should rather be doing something like
+            // this.BHV.getEvents() or something.. fuck it..
+            // setting self is needed to be able to reference it from the callback
+            // function... since we won't have control over how that one gets called
+            // we could pass it through as an event parameter, but that could possibly
+            // override some params the user is using and will be overly syntaxy
+            var evs = this.BHV._events, self = this;
+
+            for (var i in evs) {
+                // we need to wrap this so that the value of i will be maintained unique
+                // and not updated as we go further, or else it will always be the newest
+                // version (last element of the object)
+                // an alternative, since we're using jquery would be to use $.each on the
+                // event list above..
+                (function(){
+                    var eventName = i;
+                    self.$element.bind(eventName, function (e) {
+                        var active = self.eventIsActive(eventName);
+                        self.log('called: ',eventName, active ? " (active)" : " (not active)");
+                        if (active) {
+                            // adding the element to the end of the arguments list
+                            // I wish arguments was detected as an array so it would
+                            // have arguments.push, but at least it has arguments.length
+                            arguments[arguments.length] = self.$element;
+                            return evs[eventName].apply(self, arguments);
+                        } else {
+                            // so that if it's a click or a form submit, and it's disabled
+                            // the default action won't be fired.. we're not doing
+                            // stopPropagation() though, because there might be some stuff
+                            // that's out of our reach that's supposed to get fired..
+                            e.preventDefault();
+                        }
+                    });
+                })();
+            }
+        },
+
+        setInitialState: function (state) {
+
+            // the setState method actually makes the assumption that there is
+            // always a previous state, so we'll have to manually do the same steps
+            // as that one does here
+            this.currentState = this.BHV.getInitialState();
+
+            // get the state properties
+            var stateProps = this.BHV._states[this.currentState];
+
+            // set classes to the initial state
+            this.classes("addClass",this.currentState);
+
+            // call the callback from stateOn
+            this.callCallback(stateProps.stateOn);
+
+        },
+
+        getState: function () {
+            return this.currentState;
+        },
+
+        state: function (stateName) {
+            // if no state provided or it was empty..
+            if (typeof stateName === UNDEFINED || !stateName) {
+                return this.getState();
+            } else {
+                return this.setState(stateName);
+            }
+        },
+
+        /*
+            .setState
+
+            This function will:
+              - change the current state
+              - bind or unbind events accordingly
+              - switch classes accordingly
+              - call callbacks if there are any
+        */
+        setState: function (newState) {
+            
+            this.log("settings state to: "+newState);
+
+            // check if this state is even on our list of valid states
+            if (typeof this.BHV._states[newState] === UNDEFINED) {
+                // probably output an error at some point...
+                return false;
+            }
+
+            // get the state properties for both the new and old state
+            var oldStateProps = this.BHV._states[this.currentState];
+            var newStateProps = this.BHV._states[newState];
+
+            console.log(oldStateProps, newStateProps);
+
+            // call the callback for stateOff
+            this.callCallback(oldStateProps.stateOff);
+
+            // swich classes from the old to new
+            this.switchClasses(this.currentState, newState);
+
+            // call the callback from stateOn
+            this.callCallback(newStateProps.stateOn);
+
+            // and finally actually set the state to the current one
+            this.currentState = newState;
+
+        },
+
+        // only used in .setState
+        callCallback: function (func) {
+            if (isFunction(func)) {
+                this.log("calling callback: ",func);
+                // calling the callback with the element as the parameter
+                func.call(this, this.$element);
+            }
+        },
+
+        // where "func" is either jQuery's addClass or removeClass
+        // only used in .setState
+        classes: function (func, stateName) {
+            var classes = this.BHV._states[stateName].classes;
+            // basically same as calling element.addClass(classnames) or element.removeClass(classnames)
+            this.$element[func](classes.join(" "));
+        },
+        // only used in .setState
+        switchClasses: function (fromState,toState) {
+            this.classes("removeClass",fromState);
+            this.classes("addClass",toState);
         }
-    };
-
-    BHVInstance.prototype.setInitialState = function (state) {
-
-        // the setState method actually makes the assumption that there is
-        // always a previous state, so we'll have to manually do the same steps
-        // as that one does here
-        this.currentState = this.BHV.getInitialState();
-
-        // get the state properties
-        var stateProps = this.BHV._states[this.currentState];
-
-        // set classes to the initial state
-        this.classes("addClass",this.currentState);
-
-        // call the callback from stateOn
-        this.callCallback(stateProps.stateOn);
-
-    };
-
-    BHVInstance.prototype.getState = function () {
-        return this.currentState;
-    }
-
-    BHVInstance.prototype.state = function (stateName) {
-        // if no state provided or it was empty..
-        if (typeof stateName === UNDEFINED || !stateName) {
-            return this.getState();
-        } else {
-            return this.setState(stateName);
-        }
-    };
-
-    /*
-        .setState
-
-        This function will:
-          - change the current state
-          - bind or unbind events accordingly
-          - switch classes accordingly
-          - call callbacks if there are any
-    */
-    BHVInstance.prototype.setState = function (newState) {
-        
-        this.log("settings state to: "+newState);
-
-        // check if this state is even on our list of valid states
-        if (typeof this.BHV._states[newState] === UNDEFINED) {
-            // probably output an error at some point...
-            return false;
-        }
-
-        // get the state properties for both the new and old state
-        var oldStateProps = this.BHV._states[this.currentState];
-        var newStateProps = this.BHV._states[newState];
-
-        console.log(oldStateProps, newStateProps);
-
-        // call the callback for stateOff
-        this.callCallback(oldStateProps.stateOff);
-
-        // swich classes from the old to new
-        this.switchClasses(this.currentState, newState);
-
-        // call the callback from stateOn
-        this.callCallback(newStateProps.stateOn);
-
-        // and finally actually set the state to the current one
-        this.currentState = newState;
-
-    };
-
-    // only used in .setState
-    BHVInstance.prototype.callCallback = function (func) {
-        if (isFunction(func)) {
-            this.log("calling callback: ",func);
-            // calling the callback with the element as the parameter
-            func.call(this, this.$element);
-        }
-    };
-
-    // where "func" is either jQuery's addClass or removeClass
-    // only used in .setState
-    BHVInstance.prototype.classes = function (func, stateName) {
-        var classes = this.BHV._states[stateName].classes;
-        // basically same as calling element.addClass(classnames) or element.removeClass(classnames)
-        this.$element[func](classes.join(" "));
-    }
-    // only used in .setState
-    BHVInstance.prototype.switchClasses = function (fromState,toState) {
-        this.classes("removeClass",fromState);
-        this.classes("addClass",toState);
     };
 
 
@@ -222,118 +226,122 @@ window.Behave = (function ($) {
 
     }
 
-    BHV.prototype.eventsAreSane = function () {
+    /* define all prototype functions in object notation */
+    BHV.prototype = {
 
-        // Loop through all states and make sure there are no event disablers
-        // that have been set to events that have not been defined - else they will get
-        // triggered when the states get loaded
-        for (var i in this._states) {
-            var st = this._states[i];
-            var evs = st.disableEvents;
-            for (var k = 0; k < evs.length; k++) {
-                if (typeof this._events[evs[k]] === "undefined") {
-                    // should maybe echo or print out.. ??
-                    this.log('events are NOT sane: ', evs[k], ' is nowhere to be found...');
-                    return false;
+        eventsAreSane: function () {
+
+            // Loop through all states and make sure there are no event disablers
+            // that have been set to events that have not been defined - else they will get
+            // triggered when the states get loaded
+            for (var i in this._states) {
+                var st = this._states[i];
+                var evs = st.disableEvents;
+                for (var k = 0; k < evs.length; k++) {
+                    if (typeof this._events[evs[k]] === "undefined") {
+                        // should maybe echo or print out.. ??
+                        this.log('events are NOT sane: ', evs[k], ' is nowhere to be found...');
+                        return false;
+                    }
                 }
             }
+            return true;
+        },
+
+
+        getInitialState: function () {
+
+            if (this.options.initialState) return this.options.initialState;
+
+            // a pretty hacky way to get the first state if none has been
+            // defined (also make sure that if it gets called again, that we've
+            // already set it
+            for (var i in this._states) {
+                return this.options.initialState = this._states[i];
+            }
+
+        },
+
+        /*
+           Possible "settings":
+
+              classes       a set of classes that will be applied to the object
+                            when it has this state
+
+              disableEvents which events will be disabled when it reaches this
+                            state
+
+              stateOn       callback function that will be called when the object
+                            reaches this state
+
+              stateOff      callback function that will be called when the object
+                            exits this state
+        */
+
+        addState: function (state,settings) {
+
+            if (typeof this._states[state] !== UNDEFINED) {
+                // state has already been defined
+                return false;
+            }
+
+            // we could also extend some default object, but
+            // I think it won't be needed..
+            this._states[state] = $.extend({},{
+                classes: [],
+                disableEvents: [],
+                stateOn: null,
+                stateOff: null
+            },settings);
+
+            return true;
+        },
+
+        addEvent: function (eventName, handler) {
+            // todo: add a check for type of eventName?
+            if (!isFunction(handler)) {
+                return false;
+            }
+
+            if (typeof this._events[eventName] !== UNDEFINED) {
+                // event name has already been defined
+                return false;
+            }
+
+            this._events[eventName] = handler;
+        },
+
+
+        // this requires a jQuery collection at this point...
+        addCollection: function ($collection) {
+
+            // check maybe to make sure the collection is a jQuery object. if it
+            // isn't then make it one? currently ignoring...
+
+            // should we check on this object's data param or should we check on
+            // the current collection array if this has already been added?
+
+            // when this function completes, each element should have an instance of
+            // BHVInstance added to a data property. So if that data property has been
+            // defined and is of that particular type, we don't want to run it again.
+            // todo: find a better way of determining if this is a BHVInstance object than
+            // using the .currentState property (ugly hack)
+            if (typeof $collection.data(BHVI) === "object" && $collection.data(BHVI).currentState !== UNDEFINED) {
+                return false;
+            }
+
+            // create the object for this thing using the current BHV object and a reference to the
+            // element itself - it will take care of adding the object to the element itself:
+            var instance = new BHVInstance(this, $collection);
+
+            // append this object to our collection - so we have a reference to the instance
+            // and the instace has a reference to this object - cross reference
+            this._$collections.push($collection);
+
+            // don't know if this will ever be used.. who knows:
+            return true;
+
         }
-        return true;
-    };
-
-
-    BHV.prototype.getInitialState = function () {
-
-        if (this.options.initialState) return this.options.initialState;
-
-        // a pretty hacky way to get the first state if none has been
-        // defined (also make sure that if it gets called again, that we've
-        // already set it
-        for (var i in this._states) {
-            return this.options.initialState = this._states[i];
-        }
-
-    };
-
-    /*
-       Possible "settings":
-
-          classes       a set of classes that will be applied to the object
-                        when it has this state
-
-          disableEvents which events will be disabled when it reaches this
-                        state
-
-          stateOn       callback function that will be called when the object
-                        reaches this state
-
-          stateOff      callback function that will be called when the object
-                        exits this state
-    */
-
-    BHV.prototype.addState = function (state,settings) {
-
-        if (typeof this._states[state] !== UNDEFINED) {
-            // state has already been defined
-            return false;
-        }
-
-        // we could also extend some default object, but
-        // I think it won't be needed..
-        this._states[state] = $.extend({},{
-            classes: [],
-            disableEvents: [],
-            stateOn: null,
-            stateOff: null
-        },settings);
-
-        return true;
-    };
-
-    BHV.prototype.addEvent = function (eventName, handler) {
-        // todo: add a check for type of eventName?
-        if (!isFunction(handler)) {
-            return false;
-        }
-
-        if (typeof this._events[eventName] !== UNDEFINED) {
-            // event name has already been defined
-            return false;
-        }
-
-        this._events[eventName] = handler;
-    };
-
-
-    // this requires a jQuery collection at this point...
-    BHV.prototype.addCollection = function ($collection) {
-
-        // check maybe to make sure the collection is a jQuery object. if it
-        // isn't then make it one? currently ignoring...
-
-        // should we check on this object's data param or should we check on
-        // the current collection array if this has already been added?
-
-        // when this function completes, each element should have an instance of
-        // BHVInstance added to a data property. So if that data property has been
-        // defined and is of that particular type, we don't want to run it again.
-        // todo: find a better way of determining if this is a BHVInstance object than
-        // using the .currentState property (ugly hack)
-        if (typeof $collection.data(BHVI) === "object" && $collection.data(BHVI).currentState !== UNDEFINED) {
-            return false;
-        }
-
-        // create the object for this thing using the current BHV object and a reference to the
-        // element itself - it will take care of adding the object to the element itself:
-        var instance = new BHVInstance(this, $collection);
-
-        // append this object to our collection - so we have a reference to the instance
-        // and the instace has a reference to this object - cross reference
-        this._$collections.push($collection);
-
-        // don't know if this will ever be used.. who knows:
-        return true;
-
     };
 
 
