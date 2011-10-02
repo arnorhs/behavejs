@@ -94,7 +94,7 @@ window.Behave = (function ($) {
                             // I wish arguments was detected as an array so it would
                             // have arguments.push, but at least it has arguments.length
                             arguments[arguments.length] = self.$element;
-                            return evs[eventName].apply(self, arguments);
+                            return evs[eventName].apply(this, arguments);
                         } else {
                             // so that if it's a click or a form submit, and it's disabled
                             // the default action won't be fired.. we're not doing

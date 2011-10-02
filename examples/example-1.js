@@ -51,13 +51,13 @@ toggle.addEvent("mouseleave", function () {
 toggle.addEvent("click", function () {
 
     // do code to start ajax request
-    if (this.state() === "off") {
+    if ($(this).state() === "off") {
         // do ajax requst for toggling on
         // when successful, turn the state on - possibly in some other event
-        this.state("on");
+        $(this).state("on");
     } else {
         // do ajax request for toggling off
-        this.state("off");
+        $(this).state("off");
 
     }
 });
