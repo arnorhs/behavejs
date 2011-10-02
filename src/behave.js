@@ -300,6 +300,16 @@ window.Behave = (function ($) {
             return true;
         },
 
+        // basically the same as addState - just accepts an object instead
+        // maybe this could be overloaded to only have to use one method for
+        // both cases... not sure
+        addStates: function (states) {
+            for (var i in states) {
+                this.addState(i, states[i]);
+            }
+            return true;
+        },
+
         addEvent: function (eventName, handler) {
             // todo: add a check for type of eventName?
             if (!isFunction(handler)) {
