@@ -125,6 +125,11 @@ window.Behave = (function ($) {
 
         },
 
+        inStates: function (states) {
+            // assuming states is always an array
+            return states.indexOf(this.getState()) >= 0;
+        },
+
         getState: function () {
             return this.currentState;
         },
