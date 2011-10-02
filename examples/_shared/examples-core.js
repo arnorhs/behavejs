@@ -17,6 +17,9 @@ example = examples[url]
 $(function(){
     var $src = $('<script src="'+url+'.js"></script>');
     $('body').append($src);
+    console.log(examples[url]);
+    document.title = examples[url]["title"];
+
 });
 
 
