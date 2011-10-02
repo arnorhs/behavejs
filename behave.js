@@ -336,6 +336,27 @@ window.Behave = (function ($) {
 
     };
 
+
+
+    // highly dubious bit.. modifying jQuery to add a reference to the 
+    // .state() function.. :S
+    // this is basically a proxy function
+    // does not return "this" so it's not chainable
+    $.fn.state = function () {
+
+        // bhvi
+        var bhvi = this.data(BHVI);
+
+        // try to see if the object is of the right type..
+        if (typeof bhvi === UNDEFINED || bhvi.currentState === UNDEFINED) {
+            // essentially the function fails
+            return false;
+        }
+        // call the original object's function with the parameters passed to this one
+        return bhvi.state.apply(bhvi, arguments);
+
+    }
+
     return BHV;
 
 })(jQuery);
