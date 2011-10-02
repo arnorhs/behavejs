@@ -324,6 +324,13 @@ window.Behave = (function ($) {
             this._events[eventName] = handler;
         },
 
+        addEvents: function (events) {
+            for (var i in events) {
+                this.addEvent(i, events[i]);
+            }
+            return true;
+        },
+
 
         // this requires a jQuery collection at this point...
         addCollection: function ($collection) {
