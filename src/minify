@@ -1,0 +1,5 @@
+#!/bin/bash
+
+# Expecting the yui compressor to be located one directory below the current one. Change this
+# if you feel like it.
+java -jar ../yuicompressor-2.4.4.jar -o ./behave.min.js --type js src/behave.js
