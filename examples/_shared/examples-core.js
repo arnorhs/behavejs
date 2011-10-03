@@ -15,9 +15,7 @@ example = examples[url]
 
 // when dom loads, add the appropriate script/css
 $(function(){
-    var $src = $('<script src="'+url+'.js"></script>');
-    $('body').append($src);
-    console.log(examples[url]);
+    $('<script src="'+url+'.js"></script><style> @import "'+url+'.css"; </style>').appendTo('body');
     document.title = examples[url]["title"];
 
 });
