@@ -112,7 +112,13 @@ window.Behave = (function ($) {
             // the setState method actually makes the assumption that there is
             // always a previous state, so we'll have to manually do the same steps
             // as that one does here
+
+            // if the initialState property provided is a callback, it promises to
+            // return a state...
             this.currentState = this.BHV.getInitialState();
+            if (isFunction(this.currentState)) {
+                this.currentState = this.currentState.call(this.$element.get());
+            }
 
             // get the state properties
             var stateProps = this.BHV._states[this.currentState];
@@ -222,8 +228,8 @@ window.Behave = (function ($) {
         // our "private" vars
         this._states = {};
         this._events = {};
-        // jQuery collections will be collected here:
-        this._$collections = [];
+        // BHVInstances will be collected here:
+        this._instances = [];
         // current object is null for now
         this._current_object = null;
 
@@ -252,6 +258,8 @@ window.Behave = (function ($) {
         },
 
 
+        // note that the initialState variable could be a callback that returns
+        // the initial state
         getInitialState: function () {
 
             if (this.options.initialState) return this.options.initialState;
@@ -350,14 +358,19 @@ window.Behave = (function ($) {
                 return false;
             }
 
-            // create the object for this thing using the current BHV object and a reference to the
-            // element itself - it will take care of adding the object to the element itself:
-            var instance = new BHVInstance(this, $collection);
+            var bhv = this;
 
-            // append this object to our collection - so we have a reference to the instance
-            // and the instace has a reference to this object - cross reference
-            this._$collections.push($collection);
+            // go through each of the jquery elements...
+            $collection.each(function(i,element) {
+                // create the object for this thing using the current BHV object and a reference to the
+                // element itself - it will take care of adding the object to the element itself:
+                var instance = new BHVInstance(bhv, $(element));
 
+                // append this object to our collection - so we have a reference to the instance
+                // (and the instace has a reference to this object actually)
+                bhv._instances.push(instance);
+
+            });
             // don't know if this will ever be used.. who knows:
             return true;
 
