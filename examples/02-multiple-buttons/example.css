@@ -1,0 +1,71 @@
+
+h3 {
+  margin: 0;
+}
+
+ul, ul li {
+  margin: 0;
+  padding: 0;
+  list-style:none;
+  display:block;
+}
+
+.row {
+  margin: 0 auto;
+  width: 400px;
+  padding: 10px 0;
+  border-bottom:3px solid #DDD;
+}
+
+.row .butt {
+  float: right;
+  width: auto;
+}
+
+.row button {
+  line-height: 24px;
+  border:1px solid #DDD;
+  background: #F8F8F8;
+  font-weight: bold; 
+  cursor:pointer;
+}
+
+.row button.on {
+  background: #5CD;
+  border-color: #3AB;
+  color: white;
+}
+.row button.on:hover {
+  background: #6DE;
+  border-color: #189;
+}
+
+.row button.off {
+  background: white;
+  background-image: -moz-linear-gradient(top, #FFF, #EEE);
+  color: #888;
+}
+
+.row button.off:hover {
+  background: white;
+  background-image: -moz-linear-gradient(top, #FFF, #FFF);
+  color: #888;
+}
+
+.row button.working {
+  color: #CCC;
+  background: #EEE;
+  border-color: #EEE;
+  cursor:default;
+}
+
+
+
+
+
+
+
+
+
+
+
