@@ -1,21 +1,14 @@
 
-
-/*
-    I guess there's a version of this where you allow an option
-    for setting a class on the element according to the current
-    state.. eg.:
-       new Behave({ autoClass: true });
-    but currently i haven't implemented...
-*/
+/* create this interaction behavior. debug on just for kicks. setting the
+   initial state for all buttons of this type */
 toggle = new Behave({
-    rootClass: "toggle_button",
     debug: true,
     initialState: "off"
 });
 
+/* a button of this type will be able to have these two states: */
 toggle.addState('off',{
     classes: ["off"],
-    disableEvents: ["mouseleave","mouseenter"],
     stateOn: function ($element) {
         $element.html("Click me!! :D");
     }
@@ -28,48 +21,18 @@ toggle.addState('on',{
     }
 });
 
-toggle.addState('working',{
-    classes: ["toggle_button", "spinner"],
-    disableEvents: [],
-    stateOn: function (element) {
-        // basically do any html rendering required.. for the state
-        // eg. maybe set the disabled state on the button
-        element.attr("disabled",true);
-    },
-    stateOff: function (element) {
-        // maybe remove the attribute for disabled...
-        element.removeAttr("disabled");
-    }
-});
-
-toggle.addEvent("mouseenter", function () {
-});
-
-toggle.addEvent("mouseleave", function () {
-});
-
+/* We define an event for this button */
 toggle.addEvent("click", function () {
-
-    // do code to start ajax request
-    if ($(this).state() === "off") {
-        // do ajax requst for toggling on
-        // when successful, turn the state on - possibly in some other event
-        $(this).state("on");
-    } else {
-        // do ajax request for toggling off
-        $(this).state("off");
-
-    }
+    $(this).state($(this).state() === "off" ? "on" : "off");
 });
 
 
+/* add any button you like to this behavior - note that we're not really enforcing
+   any restrictions on what you add to the collection - could just as well be
+   a div or an image or whatever */
 $(function(){
 
-    var $toggle_button = $('<button>Toggle me</button>');
-    toggle.addCollection($toggle_button);
-
-    $toggle_button.appendTo('body');
-
+    toggle.addCollection($('button'));
 
 });
 
