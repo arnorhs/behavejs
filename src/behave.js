@@ -160,7 +160,7 @@ window.Behave = (function ($) {
         */
         setState: function (newState) {
             
-            this.log("settings state to: "+newState);
+            this.log("setting state to: "+newState);
 
             // check if this state is even on our list of valid states
             if (typeof this.BHV._states[newState] === UNDEFINED) {
