@@ -1,4 +1,4 @@
-
+@import "../_shared/global-examples-styles.css";
 h3 {
   margin: 0;
 }
@@ -11,8 +11,6 @@ ul, ul li {
 }
 
 .row {
-  margin: 0 auto;
-  width: 400px;
   padding: 10px 0;
   border-bottom:3px solid #DDD;
 }
@@ -41,7 +39,7 @@ ul, ul li {
 }
 
 .row button.off {
-  background: white;
+  background: #EEE;
   background-image: -moz-linear-gradient(top, #FFF, #EEE);
   color: #888;
 }
