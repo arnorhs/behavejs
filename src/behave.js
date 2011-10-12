@@ -222,7 +222,8 @@ window.Behave = (function ($) {
           // default options
           debug: false,
           initialState: null,
-          rootClass: ""
+          rootClass: "",
+          autoClass: false
         },options);
 
         // our "private" vars
@@ -296,6 +297,8 @@ window.Behave = (function ($) {
                 return false;
             }
 
+            settings = (typeof settings === UNDEFINED) ? {} : settings;
+
             // we could also extend some default object, but
             // I think it won't be needed..
             this._states[state] = $.extend({},{
@@ -304,6 +307,10 @@ window.Behave = (function ($) {
                 stateOn: null,
                 stateOff: null
             },settings);
+
+            if (this.options.autoClass) {
+                this._states[state].classes.push(state);
+            }
 
             return true;
         },

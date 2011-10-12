@@ -47,9 +47,6 @@ they're probably wrong, so I think I'll have to get win running on my machine
 or try in somebody else's machine...
 
 #Todo:
-  - Adding a "autoClass" option for when you want to automatically add a class
-    to the element which is the same as the active state - should reduce the
-    need for the "classes" property.
   - Check the support of "throw" across all browsers - we could use that for
     when something's been instantiated wrong. Currently we're just returning
     false...
