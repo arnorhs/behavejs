@@ -9,15 +9,15 @@ toggle = new Behave({
 /* a button of this type will be able to have these two states: */
 toggle.addState('off',{
     classes: ["off"],
-    stateOn: function ($element) {
-        $element.html("Click me!! :D");
+    stateOn: function () {
+        $(this).html("Click me!! :D");
     }
 });
 
 toggle.addState('on',{
     classes: ["on"],
-    stateOn: function ($element) {
-        $element.html("I'm OANN!!");
+    stateOn: function () {
+        $(this).html("I'm OANN!!");
     }
 });
 

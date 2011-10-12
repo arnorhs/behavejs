@@ -47,13 +47,6 @@ they're probably wrong, so I think I'll have to get win running on my machine
 or try in somebody else's machine...
 
 #Todo:
-  - Probably should make the stateOn and stateOff functions be executed in the
-    same context as the events and other callbacks in that the "this" value
-    should be the element's object - although that would mean we could not
-    change to elements that reference the same actual underlying items (like
-    when the same button with the same action is placed on multiple locations,
-    but that's probably also an issue with the currently executed
-    callbacks...)
   - Adding a "autoClass" option for when you want to automatically add a class
     to the element which is the same as the active state - should reduce the
     need for the "classes" property.

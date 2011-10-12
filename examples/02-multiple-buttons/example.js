@@ -22,14 +22,14 @@ button = new Behave({
 button.addStates({
     off: {
         classes: ["off"],
-        stateOn: function ($element) {
-            $element.html("Off");
+        stateOn: function () {
+            $(this).html("Off");
         }
     },
     on: {
         classes: ["on"],
-        stateOn: function ($element) {
-            $element.html("I'm OANN!!");
+        stateOn: function () {
+            $(this).html("I'm OANN!!");
         }
     },
     // when the button is in the "working" state - then you can't
@@ -39,14 +39,14 @@ button.addStates({
     working: {
         classes: ["working"],
         disableEvents: ["click"],
-        stateOn: function ($element) {
+        stateOn: function () {
             // basically do any html rendering required.. for the state
             // eg. maybe set the disabled state on the button
-            $element.html('working...').attr("disabled",true);
+            $(this).html('working...').attr("disabled",true);
         },
-        stateOff: function ($element) {
+        stateOff: function () {
             // maybe remove the attribute for disabled...
-            $element.removeAttr("disabled");
+            $(this).removeAttr("disabled");
         }
     }
 });

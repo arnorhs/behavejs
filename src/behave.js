@@ -44,7 +44,7 @@ window.Behave = (function ($) {
         if (!this.BHV.eventsAreSane()) return false;
 
         this.setEvents();
-        
+
         // will set the first state and call any callbacks, add classes
         // etc accordingly
         this.setInitialState();
@@ -190,8 +190,8 @@ window.Behave = (function ($) {
         callCallback: function (func) {
             if (isFunction(func)) {
                 this.log("calling callback: ",func);
-                // calling the callback with the element as the parameter
-                func.call(this, this.$element);
+                // calling the callback with the element as the this value
+                func.call(this.$element.get());
             }
         },
 
